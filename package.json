@@ -1,0 +1,19 @@
+{
+  "name": "project-camp",
+  "version": "1.0.0",
+  "description": "a project management application ",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node index.js"
+  },
+  "keywords": [
+    "backend",
+    "apis"
+  ],
+  "author": "raiiden",
+  "license": "ISC",
+  "devDependencies": {
+    "prettier": "3.6.2"
+  }
+}
