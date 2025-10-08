@@ -22,6 +22,11 @@ app.use(
 import healthCheckRouter from "./routes/health_check.routes.js";
 app.use("/api/v1/healthCheck", healthCheckRouter);
 
+// import authentication router
+import auth_router from "./routes/auth.routes.js"
+app.use("/api/v1/auth", auth_router);
+
+
 app.get("/", (req, res) => {
     res.send("welcome to project camp");
 });
