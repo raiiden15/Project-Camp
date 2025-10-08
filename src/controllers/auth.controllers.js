@@ -32,7 +32,6 @@ const register_user = async_handler(async (req, res) => {
         throw new ApiError(
             409,
             "User with this email / password, already exists",
-            [],
         );
     }
 
@@ -52,7 +51,7 @@ const register_user = async_handler(async (req, res) => {
     await send_email({
         email: user?.email,
         subject: "Please verify Email",
-        mail_gen_conten: email_verification_mail_gen_content(
+        mail_gen_content: email_verification_mail_gen_content(
             user.username,
             `${req.protocol}://${req.get("host")}/api/v1/users/verify-email/${unhashed_token}`,
         ),
