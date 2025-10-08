@@ -2,7 +2,7 @@ import mail_gen from "mailgen";
 import nodemailer from "nodemailer";
 
 // send email
-const send_email = async (options) => {
+const sendMail = async (options) => {
     const mail_generator = new mail_gen({
         theme: "default",
         product: {
@@ -11,16 +11,14 @@ const send_email = async (options) => {
         },
     });
 
-    const email_textual = mail_generator.generatePlainText(
-        options.mail_gen_content,
-    );
+    const email_textual = mail_generator.generatePlaintext(options.mail_gen_content);
     const email_html = mail_generator.generate(options.mail_gen_content);
 
-    nodemailer.createTransport({
+    const transporter = nodemailer.createTransport({
         host: process.env.MAIL_TRAP_SMPT_HOST,
         port: process.env.MAIL_TRAP_SMPT_PORT,
         auth: {
-            user: MAIL_TRAP_SMPT_USER,
+            user: process.env.MAIL_TRAP_SMPT_USER,
             pass: process.env.MAIL_TRAP_SMPT_PASS,
         },
     });
@@ -34,7 +32,7 @@ const send_email = async (options) => {
     };
 
     try {
-        await transporter.send_email(mail);
+        await transporter.sendMail(mail);
     } catch (err) {
         console.error(
             "Email Service Failed, make sure you have provided your mailtrap credentials in .env file",
@@ -85,5 +83,5 @@ const forgot_password_mail_gen_content = (username, pass_reset_url) => {
 export {
     email_verification_mail_gen_content,
     forgot_password_mail_gen_content,
-    send_email,
+    sendMail,
 };

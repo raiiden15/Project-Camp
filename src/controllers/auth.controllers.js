@@ -4,7 +4,8 @@ import { async_handler } from "../utils/async_handler.js";
 import { ApiError } from "../utils/api_error.js";
 import {
     email_verification_mail_gen_content,
-    send_email,
+    forgot_password_mail_gen_content,
+    sendMail,
 } from "../utils/mail_gen.js";
 
 const generate_tokens = async (user_id) => {
@@ -14,7 +15,7 @@ const generate_tokens = async (user_id) => {
         const refresh_token = user.generate_refresh_token();
 
         user.refresh_token = refresh_token;
-        await user.save({ validateBeforeSave: false }); // just update single value, not all values
+        await user.save({ validateBeforeSave: false }); // just update single value, not all values. 
         return { access_token, refresh_token };
     } catch (error) {
         throw new ApiError(500, "Something went wrong while generating tokens");
@@ -22,10 +23,10 @@ const generate_tokens = async (user_id) => {
 };
 
 const register_user = async_handler(async (req, res) => {
-    const { email, username, password, role } = req.body;
+    const { email, user_name, password, role } = req.body;
 
     const user_exists = await User.findOne({
-        $or: [{ username }, { email }],
+        $or: [{ user_name }, { email }],
     });
 
     if (user_exists) {
@@ -38,7 +39,7 @@ const register_user = async_handler(async (req, res) => {
     const user = await User.create({
         email,
         password,
-        username,
+        user_name,
         is_email_verified: false,
     });
 
@@ -46,13 +47,14 @@ const register_user = async_handler(async (req, res) => {
     const { unhashed_token, hashed_token, token_expiry } = user.generate_temp_token();
     user.email_verification_token = hashed_token;
     user.email_verification_expiry = token_expiry;
+
     await user.save({ validateBeforeSave: false });
 
-    await send_email({
+    await sendMail({
         email: user?.email,
         subject: "Please verify Email",
         mail_gen_content: email_verification_mail_gen_content(
-            user.username,
+            user.user_name,
             `${req.protocol}://${req.get("host")}/api/v1/users/verify-email/${unhashed_token}`,
         ),
     });
