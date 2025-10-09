@@ -100,7 +100,7 @@ user_schema.methods.generate_refresh_token = function () {
             _id: this._id,
         },
         process.env.REFRESH_TOKEN_SECRET,
-        { expiredIn: process.env.REFRESH_TOKEN_EXPIRY },
+        { expiresIn: process.env.REFRESH_TOKEN_EXPIRY },
     );
 };
 
@@ -116,5 +116,6 @@ user_schema.methods.generate_temp_token = function () {
 
     return { unhashed_token, hashed_token, token_expiry };
 };
+
 
 export const User = mongoose.model("User", user_schema);

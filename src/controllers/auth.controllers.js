@@ -15,7 +15,7 @@ const generate_tokens = async (user_id) => {
         const refresh_token = user.generate_refresh_token();
 
         user.refresh_token = refresh_token;
-        await user.save({ validateBeforeSave: false }); // just update single value, not all values. 
+        await user.save({ validateBeforeSave: false }); // just update single value, not all values.
         return { access_token, refresh_token };
     } catch (error) {
         throw new ApiError(500, "Something went wrong while generating tokens");
@@ -44,7 +44,8 @@ const register_user = async_handler(async (req, res) => {
     });
 
     // generate token
-    const { unhashed_token, hashed_token, token_expiry } = user.generate_temp_token();
+    const { unhashed_token, hashed_token, token_expiry } =
+        user.generate_temp_token();
     user.email_verification_token = hashed_token;
     user.email_verification_expiry = token_expiry;
 
@@ -81,4 +82,59 @@ const register_user = async_handler(async (req, res) => {
     );
 });
 
-export { register_user };
+const login = async_handler(async (req, res) => {
+    const {email, password} = req.body
+
+    if (!email) {
+        throw new ApiError(400, "Username or email is empty!");
+    }
+
+    const user = await User.findOne({ email }); 
+
+    if (!user) {
+        throw new ApiError(400, "User does not exists");
+    }
+
+    const is_pass_correct = await user.is_pass_correct(password) 
+
+    if (!is_pass_correct) {
+        throw new ApiError(400, "Invalid Password")
+    }
+
+    const {access_token, refresh_token} = await generate_tokens(user._id);
+
+    const loggedin_user = await User.findById(user._id).select(
+        "-password -refresh_token -email_verification_token -email_verification_expiry",
+    ); // - attributes are not sent.
+
+    if (!loggedin_user) {
+        throw new ApiError(
+            500,
+            "Something went wrong while registring an user.",
+        );
+    }
+
+    const options = {
+        httpOnly: true, 
+        secure: true
+    }
+
+    return res
+        .status(200)
+        .cookie("access_token", access_token, options)
+        .cookie("refresh_token", refresh_token, options)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    user: loggedin_user,
+                    access_token, 
+                    refresh_token
+                }, 
+                "User Logged in Successfully.!"
+            )
+        )
+    }
+)
+
+export { register_user, login };

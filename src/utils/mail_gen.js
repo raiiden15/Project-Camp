@@ -11,7 +11,9 @@ const sendMail = async (options) => {
         },
     });
 
-    const email_textual = mail_generator.generatePlaintext(options.mail_gen_content);
+    const email_textual = mail_generator.generatePlaintext(
+        options.mail_gen_content,
+    );
     const email_html = mail_generator.generate(options.mail_gen_content);
 
     const transporter = nodemailer.createTransport({

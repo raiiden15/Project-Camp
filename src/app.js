@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 
 const app = express();
 
@@ -7,6 +8,7 @@ const app = express();
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" })); // we are doing this to parse the form data
 app.use(express.static("public")); // to serve static files like images, css files, js files
+app.use(cookieParser())
 
 // cors configuration
 app.use(
@@ -23,9 +25,8 @@ import healthCheckRouter from "./routes/health_check.routes.js";
 app.use("/api/v1/healthCheck", healthCheckRouter);
 
 // import authentication router
-import auth_router from "./routes/auth.routes.js"
+import auth_router from "./routes/auth.routes.js";
 app.use("/api/v1/auth", auth_router);
-
 
 app.get("/", (req, res) => {
     res.send("welcome to project camp");
