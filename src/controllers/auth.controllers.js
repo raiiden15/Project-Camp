@@ -295,6 +295,85 @@ const refresh_access_token = async_handler(async (req, res) => {
     }
 });
 
+const forgot_password = async_handler(async (req, res) => {
+    const {email} = req.body;
+    const user = await User.findOne({email})
+
+    if (!user) {
+        throw new ApiError(
+        412, "Could not find User."
+        )
+    }
+
+    // user found 
+    const {unhashed_token, hashed_token, token_expiry} = user.generate_temp_token()
+    user.forgot_password_token = hashed_token
+    user.forgot_password_expiry = token_expiry
+
+    await user.save({validateBeforeSave: false})
+
+    await sendMail({
+        email: user?.email,
+        subject: "Password Reset Request",
+        mail_gen_content: forgot_password_mail_gen_content(
+            user.user_name,
+            `${process.env.FORGOT_PASSWORD_REDIRECT_URL}/${unhashed_token}`,
+        ),
+    })
+
+    res.status(200).json(
+        new ApiResponse(
+            200, {}, "Password reset mail sent on registered email ID."
+        )
+    )
+}) 
+
+const reset_forgot_password = async_handler(async (req, res) => {
+    const {resetToken} = req.params;
+    const {newPassword} = req.body;
+
+    let hashed_token = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+    const user = await User.findOne({forgot_password_token: hashed_token, forgot_password_expiry: {$gt: Date.now()}})
+
+    if (!user) {
+        throw new ApiError(
+            412, "Token is invalid or expired"
+        )
+    }
+
+    user.forgot_password_expiry = undefined;
+    user.forgot_password_token = undefined;
+    
+    user.password = newPassword;
+
+    await user.save({validateBeforeSave: false});
+
+    return res.status(200).json(
+        new ApiResponse(200, {}, "Password Reset successfully!")
+    );
+});
+
+const change_current_password = async_handler(async (req, res) => {
+    const {oldPassword, newPassword} = req.body;    
+    
+    const user = await User.findById(req.user?._id);
+
+    const isPassValid = await user.is_pass_correct(oldPassword);
+
+    if (!isPassValid) {
+        throw new ApiError(400, "Invalid Old Password")
+    }
+
+    user.password = newPassword;
+    await user.save({validateBeforeSave: false})
+    return res.status(200).json(
+        new ApiResponse(
+            200, {}, "Password Changed successfully!"
+        )
+    )
+})
+
 export {
     register_user,
     login,
@@ -303,4 +382,7 @@ export {
     verify_email,
     resent_email_verification,
     refresh_access_token,
+    forgot_password,
+    reset_forgot_password,
+    change_current_password
 };

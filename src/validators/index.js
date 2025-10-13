@@ -34,4 +34,23 @@ const user_login_validator = () => {
         body("password").notEmpty().withMessage("Password cannot be empty"),
     ];
 };
-export { user_register_validator, user_login_validator };
+
+const userChangeCurrentPassValidator = () => {
+    return [
+        body("oldPassword").notEmpty().withMessage("Old Password is required"),
+        body("newPassword").notEmpty().withMessage("New Password is required")
+    ]
+};
+
+const userForgotValidator = () => {
+    return [
+        body("email").notEmpty().withMessage("Email is required").isEmail().withMessage("Email is invalid")
+    ]
+};
+
+const userResetForgotPassValidator = () => {
+    return [
+        body("newPassword").isEmpty().withMessage("Password is required")
+    ]
+}
+export { user_register_validator, user_login_validator, userChangeCurrentPassValidator, userForgotValidator, userResetForgotPassValidator };
