@@ -117,5 +117,4 @@ user_schema.methods.generate_temp_token = function () {
     return { unhashed_token, hashed_token, token_expiry };
 };
 
-
 export const User = mongoose.model("User", user_schema);
